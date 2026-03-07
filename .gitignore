@@ -1,0 +1,6 @@
+.gradle/
+build/
+bin/
+lib/
+src/main/resources/blob.bin
+src/main/resources/trusted_setup.txt
