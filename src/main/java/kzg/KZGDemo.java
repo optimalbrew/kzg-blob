@@ -18,26 +18,59 @@ public class KZGDemo {
         CKZG4844JNI.loadTrustedSetup("src/main/resources/trusted_setup.txt", 0);
 
         System.out.println("Reading blob data...");
-        Path blobPath = Paths.get("src/main/resources/blob.bin");
-        byte[] blob = Files.readAllBytes(blobPath);
-        if (blob.length != CKZG4844JNI.BYTES_PER_BLOB) {
-            throw new RuntimeException("Unexpected blob size: " + blob.length);
+        Path blobPath1 = Paths.get("src/main/resources/blob.bin");
+        byte[] blob1 = Files.readAllBytes(blobPath1);
+        Path blobPath2 = Paths.get("src/main/resources/blob2.bin");
+        byte[] blob2 = Files.readAllBytes(blobPath2);
+        
+        if (blob1.length != CKZG4844JNI.BYTES_PER_BLOB || blob2.length != CKZG4844JNI.BYTES_PER_BLOB) {
+            throw new RuntimeException("Unexpected blob size");
         }
 
-        // The expected commitment and proof from Blobscan for the requested blob
-        String expectedCommitmentHex = "afcd8bc80163cab0a92df605c4c071a938df9d0163ae0eb731974d47c4adf3f69d3da2827ede9cb697b302044edb7b14";
-        String expectedProofHex = "890fe185e115ec215929fde001b60c3dfeff38b85130a54ea468520b1ab23fd3af00acb5c62a245ad8a8dd0f7c91e6c1";
+        // The expected commitment and proof from Blobscan for the requested blobs
+        String expectedCommitmentHex1 = "afcd8bc80163cab0a92df605c4c071a938df9d0163ae0eb731974d47c4adf3f69d3da2827ede9cb697b302044edb7b14";
+        String expectedProofHex1 = "890fe185e115ec215929fde001b60c3dfeff38b85130a54ea468520b1ab23fd3af00acb5c62a245ad8a8dd0f7c91e6c1";
+        
+        String expectedCommitmentHex2 = "abea2993faf9f7b26a840e426026137c3b410c14c158a9f9d92d3ce81c548dd35f8a65aeafc6727e598fcdc99dda6d7f";
+        String expectedProofHex2 = "86e9e03b1f37ed07f444558b0c157e00983cd19a67bb914287ba1f23afe774c4d10581dd2b2371fe88cb5e6a2880ed24";
 
-        byte[] expectedCommitment = hexStringToByteArray(expectedCommitmentHex);
-        byte[] expectedProof = hexStringToByteArray(expectedProofHex);
+        byte[] expectedCommitment1 = hexStringToByteArray(expectedCommitmentHex1);
+        byte[] expectedProof1 = hexStringToByteArray(expectedProofHex1);
 
-        System.out.println("Verifying BlobKZGProof...");
-        boolean isValid = CKZG4844JNI.verifyBlobKzgProof(blob, expectedCommitment, expectedProof);
-        System.out.println("verifyBlobKzgProof valid? " + isValid);
+        byte[] expectedCommitment2 = hexStringToByteArray(expectedCommitmentHex2);
+        byte[] expectedProof2 = hexStringToByteArray(expectedProofHex2);
 
-        System.out.println("Verifying BlobKZGProofBatch...");
-        boolean isBatchValid = CKZG4844JNI.verifyBlobKzgProofBatch(blob, expectedCommitment, expectedProof, 1);
-        System.out.println("verifyBlobKzgProofBatch valid? " + isBatchValid);
+        System.out.println("Verifying BlobKZGProof for blob 1...");
+        boolean isValid1 = CKZG4844JNI.verifyBlobKzgProof(blob1, expectedCommitment1, expectedProof1);
+        System.out.println("verifyBlobKzgProof for blob 1 valid? " + isValid1);
+
+        System.out.println("Verifying BlobKZGProof for blob 2...");
+        boolean isValid2 = CKZG4844JNI.verifyBlobKzgProof(blob2, expectedCommitment2, expectedProof2);
+        System.out.println("verifyBlobKzgProof for blob 2 valid? " + isValid2);
+
+        System.out.println("Verifying BlobKZGProofBatch for both blobs...");
+        byte[] batchBlobs = new byte[CKZG4844JNI.BYTES_PER_BLOB * 2];
+        System.arraycopy(blob1, 0, batchBlobs, 0, CKZG4844JNI.BYTES_PER_BLOB);
+        System.arraycopy(blob2, 0, batchBlobs, CKZG4844JNI.BYTES_PER_BLOB, CKZG4844JNI.BYTES_PER_BLOB);
+
+        int commitmentLen = expectedCommitment1.length;
+        byte[] batchCommitments = new byte[commitmentLen * 2];
+        System.arraycopy(expectedCommitment1, 0, batchCommitments, 0, commitmentLen);
+        System.arraycopy(expectedCommitment2, 0, batchCommitments, commitmentLen, commitmentLen);
+
+        int proofLen = expectedProof1.length;
+        byte[] batchProofs = new byte[proofLen * 2];
+        System.arraycopy(expectedProof1, 0, batchProofs, 0, proofLen);
+        System.arraycopy(expectedProof2, 0, batchProofs, proofLen, proofLen);
+
+        boolean isBatchValid = CKZG4844JNI.verifyBlobKzgProofBatch(batchBlobs, batchCommitments, batchProofs, 2);
+        System.out.println("verifyBlobKzgProofBatch for 2 blobs valid? " + isBatchValid);
+
+        // Keep variables for single-blob later assertions to not break the rest of the file
+        boolean isValid = isValid1 && isValid2;
+        byte[] blob = blob1;
+        byte[] expectedCommitment = expectedCommitment1;
+        byte[] expectedProof = expectedProof1;
 
         System.out.println("Computing KZG Commitment from blob...");
         byte[] computedCommitment = CKZG4844JNI.blobToKzgCommitment(blob);
@@ -49,7 +82,7 @@ public class KZGDemo {
         boolean proofMatch = Arrays.equals(computedProof, expectedProof);
         System.out.println("computeBlobKzgProof matches expected? " + proofMatch);
         if (!proofMatch) {
-            System.out.println("Expected proof: " + expectedProofHex);
+            System.out.println("Expected proof: " + expectedProofHex1);
             System.out.println("Computed proof: " + bytesToHex(computedProof));
         }
 

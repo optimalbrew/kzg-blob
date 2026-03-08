@@ -1,6 +1,6 @@
 # C-KZG-4844 Java Integration Demo
 
-This project demonstrates how to use the C-KZG-4844 library via its Java bindings (EIP-4844) using real data from Ethereum mainnet. This is for the orginal version of EIP-4844, where proofs are over blobs, not cells. Therefore, when picking a blob to verify (e.g. from Etherscan), we should pick something that is consistent with the original Dencun spec and not the latest Fusaka version.
+This project demonstrates how to use the [C-KZG-4844](https://github.com/ethereum/c-kzg-4844) library via its Java bindings (EIP-4844) using real data from Ethereum mainnet. This is for the orginal version of EIP-4844, where proofs are over blobs, not cells. Therefore, when picking a blob to verify (e.g. from [Etherscan](https://etherscan.io/blob/0x010b91fe89d5ad9c77c75375848808cdfac9ef8b6363c1010ee975def4ee76db?bid=7121933) or [blobscan](https://blobscan.com/blob/0x01c009877d97fa9e98760ded180e1cca0555e241d4581efb9235bea1b76aace3)). Pick something that is consistent with the original EIP-4844 (Dencun) spec and not the latest Fusaka version.
 
 ## Prerequisites
 
